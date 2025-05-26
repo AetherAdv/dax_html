@@ -1,0 +1,76 @@
+HTML_Card_Pie = 
+VAR pct = Parameter1[Parameter Value]
+VAR pctText = FORMAT(pct * 100, "0") & "%"
+VAR sizeWidth = 320
+VAR sizeHeight = 180
+
+-- Colors
+VAR baseColor = "#292929"
+VAR textColor = "#f5f5f5"
+VAR subtitleColor = "#f5f5f5"
+
+VAR fillColor = 
+    SWITCH(
+        TRUE(),
+        pct < 0.2, "#E59EFB",
+        pct > 0.8, "#F8FAB7",
+        "#6bfad8"
+    )
+
+-- Pie arc calculation
+VAR degrees = ROUND(pct * 360, 1)
+VAR largeArc = IF(degrees > 180, 1, 0)
+VAR radians = RADIANS(degrees)
+VAR x = ROUND(20 + 20 * COS(radians - PI() / 2), 1)
+VAR y = ROUND(20 + 20 * SIN(radians - PI() / 2), 1)
+VAR piePath = "M 20,0 A 20,20 0 " & largeArc & ",1 " & x & "," & y & " L 20,20 Z"
+
+-- SVG generation
+VAR svg = "
+<svg xmlns='http://www.w3.org/2000/svg' width='" & sizeWidth & "' height='" & sizeHeight & "' viewBox='0 0 " & sizeWidth & " " & sizeHeight & "'>
+  <style>
+    .card-base {
+      fill: " & baseColor & ";
+    }
+    .title {
+      font-family: Segoe UI, sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      fill: " & textColor & ";
+    }
+    .value {
+      font-family: Segoe UI, sans-serif;
+      font-size: 64px;
+      font-weight: 900;
+      fill: " & textColor & ";
+    }
+    .subtitle {
+      font-family: Segoe UI, sans-serif;
+      font-size: 14px;
+      fill: " & subtitleColor & ";
+    }
+    .pie-track {
+      fill: #111;
+    }
+    .pie-fill {
+      fill: " & fillColor & ";
+    }
+  </style>
+
+  <!-- Background -->
+  <rect class='card-base' width='" & sizeWidth & "' height='" & sizeHeight & "' rx='20' ry='20'/>
+
+  <!-- Text -->
+  <text x='30' y='60' class='title'>Performance</text>
+  <text x='30' y='120' class='value'>" & pctText & "</text>
+  <text x='30' y='160' class='subtitle'>of target reached</text>
+
+  <!-- Pie chart to the right of the percentage -->
+  <g transform='translate(220, 95)'>
+    <circle r='20' cx='20' cy='20' class='pie-track'/>
+    <path d='" & piePath & "' class='pie-fill'/>
+  </g>
+</svg>
+"
+
+RETURN "data:image/svg+xml;utf8," & svg

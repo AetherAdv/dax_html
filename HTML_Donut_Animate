@@ -1,0 +1,80 @@
+HTML_Donut_Animate = 
+
+VAR pct = Parameter1[Parameter Value]
+VAR pctText = FORMAT(pct * 100, "0") & "%"
+VAR sizeWidth = 300
+VAR sizeHeight = 300
+
+VAR baseColor = "#292929"
+VAR textColor = "#f5f5f5"
+VAR subtitleColor = "#bbb"
+
+VAR centerX = sizeWidth / 2
+VAR centerY = sizeHeight / 2
+VAR radius = MIN(sizeWidth, sizeHeight) * 0.4
+VAR fontSize = MIN(sizeWidth, sizeHeight) * 0.16
+VAR circumference = 2 * PI() * radius
+VAR strokeDashoffset = (1 - pct) * circumference
+
+VAR fillColor =
+    SWITCH(
+        TRUE(),
+        pct < 0.2, "#E59EFB",
+        pct > 0.8, "#F8FAB7",
+        "#6bfad8"
+    )
+
+
+VAR numLines = 30
+VAR linesToShow = ROUND(pct * numLines, 0)
+
+VAR orbitRadius = MIN(sizeWidth, sizeHeight) * 0.4
+VAR lineLength = MIN(sizeWidth, sizeHeight) * 0.07
+VAR lineThickness = 6
+VAR centerCircleRadius = MIN(sizeWidth, sizeHeight) * 0.067
+
+VAR svg = "
+<svg xmlns='http://www.w3.org/2000/svg' width='" & sizeWidth & "' height='" & sizeHeight & "' viewBox='0 0 " & sizeWidth & " " & sizeHeight & "'>
+  <style>
+    .bg {
+      fill: none;
+      stroke: #444;
+      stroke-width: 15;
+    }
+    .progress {
+      fill: none;
+      stroke: " & fillColor & ";
+      stroke-width: 15;
+      stroke-linecap: round;
+      stroke-dasharray: " & circumference & ";
+      stroke-dashoffset: " & circumference & ";
+      transform: rotate(-90deg);
+      transform-origin: " & centerX & "px " & centerY & "px;
+      animation: fillRing 1.5s ease-out forwards;
+    }
+    .text {
+      font-family: Segoe UI, sans-serif;
+      font-size: " & fontSize & "px;
+      font-weight: 900;
+      fill: " & textColor & ";
+      text-anchor: middle;
+      dominant-baseline: middle;
+      user-select: none;
+    }
+    @keyframes fillRing {
+      to { stroke-dashoffset: " & strokeDashoffset & "; }
+    }
+  </style>
+
+  <!-- Background circle -->
+  <circle class='bg' cx='" & centerX & "' cy='" & centerY & "' r='" & radius & "' />
+
+  <!-- Progress ring -->
+  <circle class='progress' cx='" & centerX & "' cy='" & centerY & "' r='" & radius & "' />
+
+  <!-- Center text -->
+  <text x='" & centerX & "' y='" & centerY & "' class='text'>" & pctText & "</text>
+</svg>
+"
+
+RETURN "data:image/svg+xml;utf8," & svg

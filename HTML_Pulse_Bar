@@ -1,0 +1,86 @@
+HTML_Pulse_Bar = 
+
+VAR pct = Parameter1[Parameter Value]
+VAR pctText = FORMAT(pct * 100, "0") & "%"
+
+VAR numBars = 40
+VAR barsToFill = ROUND(pct * numBars, 0)
+
+-- Determine dynamic colour
+VAR fillColor =
+    SWITCH(
+        TRUE(),
+        pct < 0.2, "#E59EFB",         
+        pct > 0.8, "#F8FAB7",         
+        "#6bfad8"                     // Default cyan
+    )
+
+-- Generate the bars
+VAR barHTML = 
+CONCATENATEX (
+    GENERATESERIES(1, numBars, 1),
+    VAR i = [Value]
+    VAR isFilled = i <= barsToFill
+    VAR barColor = IF(isFilled, fillColor, "#333")
+    VAR height = IF(isFilled, "100%", "40%")
+    VAR animation = IF(isFilled, "growBar 2s ease-in-out infinite alternate", "none")
+    RETURN "
+        <div class='bar' style='
+            background: " & barColor & ";
+            height: " & height & ";
+            animation: " & animation & ";
+        '></div>"
+)
+
+-- Dimensions increased for full bar display (added larger SVG size)
+VAR sizeWidth = 1280
+VAR sizeHeight = 200
+
+-- Build the HTML
+VAR svghtml = "
+<foreignObject x='0' y='0' width='" & sizeWidth & "' height='" & sizeHeight & "'>
+<div xmlns='http://www.w3.org/1999/xhtml'>
+<style>
+.container {
+  font-family: Segoe UI, sans-serif;
+  width: 90%;
+  height: 150px;
+  margin: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 4px;
+}
+.bar {
+  width: 20px;
+  border-radius: 4px;
+  transition: height 0.3s ease;
+}
+.percentage-label {
+  font-size: 48px;
+  font-weight: bold;
+  color: " & fillColor & ";
+  text-shadow: 0 0 6px rgba(0,0,0,0.3);
+  margin-left: 30px;
+  align-self: flex-end;
+  animation: fadeIn 0.5s ease-in;
+}
+@keyframes growBar {
+  0% { height: 80%; }
+  100% { height: 100%; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+</style>
+<div class='container'>
+  " & barHTML & "
+  <div class='percentage-label'>" & pctText & "</div>
+</div>
+</div>
+</foreignObject>"
+
+VAR svg = "<svg xmlns='http://www.w3.org/2000/svg' width='" & sizeWidth & "' height='" & sizeHeight & "'>" & svghtml & "</svg>"
+
+RETURN "data:image/svg+xml;utf8," & svg

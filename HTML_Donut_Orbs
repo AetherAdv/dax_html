@@ -1,0 +1,82 @@
+HTML_Donut_Orbs = 
+
+VAR pct = Parameter1[Parameter Value]
+VAR pctText = FORMAT(pct * 100, "0") & "%"
+VAR sizeWidth = 300
+VAR sizeHeight = 300
+
+VAR baseColor = "#292929"
+VAR textColor = "#f5f5f5"
+VAR subtitleColor = "#bbb"
+
+-- Donut orbs specific vars
+VAR numOrbs = 30
+VAR orbsToShow = ROUND(pct * numOrbs, 0)
+
+VAR centerX = sizeWidth / 2
+VAR centerY = sizeHeight / 2
+VAR orbitRadius = MIN(sizeWidth, sizeHeight) * 0.4
+VAR orbRadius = MIN(sizeWidth, sizeHeight) * 0.033
+VAR centerCircleRadius = MIN(sizeWidth, sizeHeight) * 0.067
+VAR fontSize = MIN(sizeWidth, sizeHeight) * 0.16
+
+VAR fillColor =
+    SWITCH(
+        TRUE(),
+        pct < 0.2, "#E59EFB",
+        pct > 0.8, "#F8FAB7",
+        "#6bfad8"
+    )
+
+-- Generate each orb with rotation and fade animation
+VAR orbs = 
+    CONCATENATEX (
+        GENERATESERIES(0, numOrbs - 1, 1),
+        VAR i = [Value]
+        VAR angle = i * (360 / numOrbs)
+        VAR isActive = i < orbsToShow
+        VAR orbColor = IF(isActive, fillColor, "#333")
+        VAR animation = IF(isActive, "fadeOrb 2s ease-in-out infinite", "none")
+        VAR delay = FORMAT(i * (2 / numOrbs), "0.00") & "s"
+        RETURN
+            "<circle cx='" & centerX & "' cy='" & (centerY - orbitRadius) & "' r='" & orbRadius & "' fill='" & orbColor & "' 
+            style='transform: rotate(" & angle & "deg); transform-origin: " & centerX & "px " & centerY & "px; animation: " & animation & "; animation-delay: " & delay & ";' />"
+    )
+
+VAR svg = "
+<svg xmlns='http://www.w3.org/2000/svg' width='" & sizeWidth & "' height='" & sizeHeight & "' viewBox='0 0 " & sizeWidth & " " & sizeHeight & "'>
+  <style>
+    .card-base {
+      fill: " & baseColor & ";
+    }
+    @keyframes fadeOrb {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .label {
+      font-family: Segoe UI, sans-serif;
+      font-size: " & fontSize & "px;
+      font-weight: 900;
+      fill: " & fillColor & ";
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+    .center-circle {
+      fill: #222;
+    }
+  </style>
+
+  <!-- Background -->
+  <!-- <rect class='card-base' width='" & sizeWidth & "' height='" & sizeHeight & "' rx='20' ry='20'/>-->
+  <!-- Rotating orbs -->
+  " & orbs & "
+
+  <!-- Center circle -->
+  <circle cx='" & centerX & "' cy='" & centerY & "' r='" & centerCircleRadius & "' class='center-circle'/>
+
+  <!-- Percentage label -->
+  <text x='" & centerX & "' y='" & centerY & "' class='label'>" & pctText & "</text>
+</svg>
+"
+
+RETURN "data:image/svg+xml;utf8," & svg
